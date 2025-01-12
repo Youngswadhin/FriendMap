@@ -27,9 +27,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(morgan('tiny'))
 app.use(
   cors({
-    origin: (origin, callback) => {
-      callback(null, origin) // Allow all origins
-    },
+    origin: true,
     credentials: true,
   })
 )
