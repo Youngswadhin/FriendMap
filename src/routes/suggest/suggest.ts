@@ -65,6 +65,10 @@ suggestRouter.get('/', async (req, res) => {
                 long: true,
               },
             },
+            city: true,
+            country: true,
+            state: true,
+            zip: true,
           },
         },
         hobbies: true,
@@ -82,6 +86,18 @@ suggestRouter.get('/', async (req, res) => {
 
     const friendIds = user.friends.map(friend => friend.friendId)
 
+    const friendsOfFriends = await prisma.user.findMany({
+      where: {
+        id: { in: friendIds },
+        friends: { some: { friendId: { notIn: friendIds } } },
+      },
+      select: {
+        id: true,
+      },
+    })
+
+    const friendsOfFriendsIds = friendsOfFriends.map(friend => friend.id)
+
     const suggestions = await prisma.user.findMany({
       where: {
         AND: [
@@ -89,18 +105,23 @@ suggestRouter.get('/', async (req, res) => {
           { id: { notIn: friendIds } },
           {
             OR: [
+              { id: { in: friendsOfFriendsIds } },
               {
                 address: {
                   location: {
                     lat: {
-                      gte: user.address.location.lat - 0.1,
-                      lte: user.address.location.lat + 0.1,
+                      gte: user.address.location.lat - 5,
+                      lte: user.address.location.lat + 5,
                     },
                     long: {
-                      gte: user.address.location.long - 0.1,
-                      lte: user.address.location.long + 0.1,
+                      gte: user.address.location.long - 5,
+                      lte: user.address.location.long + 5,
                     },
                   },
+                  city: user.address.city,
+                  country: user.address.country,
+                  state: user.address.state,
+                  zip: user.address.zip,
                 },
               },
               { hobbies: { hasSome: user.hobbies } },
@@ -120,6 +141,10 @@ suggestRouter.get('/', async (req, res) => {
                 long: true,
               },
             },
+            city: true,
+            country: true,
+            state: true,
+            zip: true,
           },
         },
         hobbies: true,

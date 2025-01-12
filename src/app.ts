@@ -1,6 +1,6 @@
 import express from 'express'
 import { Request, Response, NextFunction } from 'express'
-import * as bodyParser from 'body-parser'
+import bodyParser from 'body-parser'
 import morgan from 'morgan'
 import router from './routes/router'
 import cors from 'cors'
@@ -20,10 +20,19 @@ function defaultRoute(req: Request, res: Response, next: NextFunction) {
   res.sendStatus(404)
 }
 
+// @ts-ignore
 app.use(bodyParser.json())
+// @ts-ignore
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(morgan('tiny'))
-app.use(cors())
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      callback(null, origin) // Allow all origins
+    },
+    credentials: true,
+  })
+)
 app.use(cookieParser())
 
 app.use(authGuard)

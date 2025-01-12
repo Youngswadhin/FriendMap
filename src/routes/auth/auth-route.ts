@@ -8,7 +8,7 @@ import get from 'lodash/get'
 const authRouter = Router()
 
 const generateToken = (user: any) => {
-  return jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '1h' })
+  return jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '10d' })
 }
 
 const signUpSchema = z.object({
@@ -173,6 +173,52 @@ authRouter.post('/sign-up', async (req, res) => {
         hobbies,
         image,
       },
+      select: {
+        id: true,
+        name: true,
+        age: true,
+        email: true,
+        address: {
+          select: {
+            city: true,
+            zip: true,
+            country: true,
+            state: true,
+            location: {
+              select: {
+                lat: true,
+                long: true,
+              },
+            },
+          },
+        },
+        hobbies: true,
+        image: true,
+        receivedRequests: {
+          select: {
+            sender: {
+              select: {
+                name: true,
+                image: true,
+              },
+            },
+            status: true,
+            id: true,
+          },
+        },
+        sentRequests: {
+          select: {
+            receiver: {
+              select: {
+                name: true,
+                image: true,
+              },
+            },
+            status: true,
+            id: true,
+          },
+        },
+      },
     })
 
     const token = generateToken(user)
@@ -217,15 +263,66 @@ authRouter.post('/login', async (req, res) => {
     const validatedData = loginSchema.parse(req.body)
     const { email, password } = validatedData
 
-    const user = await prisma.user.findUnique({ where: { email } })
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        name: true,
+        age: true,
+        email: true,
+        password: true,
+        address: {
+          select: {
+            city: true,
+            zip: true,
+            country: true,
+            state: true,
+            location: {
+              select: {
+                lat: true,
+                long: true,
+              },
+            },
+          },
+        },
+        hobbies: true,
+        image: true,
+        receivedRequests: {
+          select: {
+            sender: {
+              select: {
+                name: true,
+                image: true,
+              },
+            },
+            status: true,
+            id: true,
+          },
+        },
+        sentRequests: {
+          select: {
+            receiver: {
+              select: {
+                name: true,
+                image: true,
+              },
+            },
+            status: true,
+            id: true,
+          },
+        },
+      },
+    })
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: 'Invalid email or password' })
     }
 
+    const { password: Password, ...restUser } = user
+
     const token = generateToken(user)
     res.cookie('jwt', token, { httpOnly: true })
-    res.status(200).json({ user, token })
+    res.status(200).json({ user: restUser, token })
   } catch (error) {
     res.status(400).json({ error: error.message })
   }
@@ -257,7 +354,55 @@ authRouter.get('/', async (req, res) => {
   try {
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET!)
     console.log(decoded)
-    const user = await prisma.user.findUnique({ where: { id: decoded.userId } })
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: {
+        id: true,
+        name: true,
+        age: true,
+        email: true,
+        address: {
+          select: {
+            city: true,
+            zip: true,
+            country: true,
+            state: true,
+            location: {
+              select: {
+                lat: true,
+                long: true,
+              },
+            },
+          },
+        },
+        hobbies: true,
+        image: true,
+        receivedRequests: {
+          select: {
+            sender: {
+              select: {
+                name: true,
+                image: true,
+              },
+            },
+            status: true,
+            id: true,
+          },
+        },
+        sentRequests: {
+          select: {
+            receiver: {
+              select: {
+                name: true,
+                image: true,
+              },
+            },
+            status: true,
+            id: true,
+          },
+        },
+      },
+    })
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' })
@@ -265,6 +410,10 @@ authRouter.get('/', async (req, res) => {
 
     res.status(200).json(user)
   } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      res.clearCookie('jwt')
+      return res.status(401).json({ error: 'Token expired' })
+    }
     res.status(400).json({ error: error.message })
   }
 })

@@ -2,7 +2,16 @@ import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 import get from 'lodash/get'
 
-const protectedRoutes = ['/auth/update', '/auth/update-password', '/friend-request', '/friend-request/get', '/friend-request/accept', '/friend-request/reject', '/suggest']
+const protectedRoutes = [
+  '/auth/update',
+  '/auth/update-password',
+  '/friend-request/create',
+  '/friend-request/get',
+  '/friend-request/accept',
+  '/friend-request/reject',
+  '/suggest',
+  '/search',
+]
 interface DecodedToken {
   userId: string
   iat: number

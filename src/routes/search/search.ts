@@ -36,21 +36,48 @@ const searchRouter = express.Router()
  *       500:
  *         description: Internal server error
  */
-searchRouter.get('/:string', async (req, res) => {
-  const searchString = req.params.string
+searchRouter.get('/', async (req, res) => {
+  const { userId } = req.user
+  const searchString = req.query.string as string
+
   try {
     const users = await prisma.user.findMany({
+      take: 10,
       where: {
-        OR: [{ name: { contains: searchString, mode: 'insensitive' } }, { email: { contains: searchString, mode: 'insensitive' } }],
+        NOT: {
+          id: userId,
+        },
+        OR: [
+          { name: { contains: searchString, mode: 'insensitive' } },
+          { email: { contains: searchString, mode: 'insensitive' } },
+          { address: { city: { contains: searchString, mode: 'insensitive' } } },
+          { address: { country: { contains: searchString, mode: 'insensitive' } } },
+          { address: { state: { contains: searchString, mode: 'insensitive' } } },
+        ],
       },
       select: {
         id: true,
         name: true,
         email: true,
+        address: {
+          select: {
+            country: true,
+            city: true,
+            zip: true,
+            state: true,
+            location: {
+              select: {
+                lat: true,
+                long: true,
+              },
+            },
+          },
+        },
       },
     })
     res.json(users)
   } catch (error) {
+    console.error(error)
     res.status(500).json({ error: 'Internal server error' })
   }
 })

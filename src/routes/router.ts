@@ -1,8 +1,11 @@
 import express from 'express'
+
 import authRouter from './auth/auth-route'
 import friendRequestRouter from './friend-request/friend-request'
 import searchRouter from './search/search'
 import suggestRouter from './suggest/suggest'
+import friendRouter from './friend/friend'
+
 import { serve, setup } from 'swagger-ui-express'
 import swaggerJSDoc from 'swagger-jsdoc'
 
@@ -52,6 +55,7 @@ router.use('/auth', authRouter)
 router.use('/friend-request', friendRequestRouter)
 router.use('/search', searchRouter)
 router.use('/suggest', suggestRouter)
+router.use('/friend', friendRouter)
 
 router.use('/api-docs', serve, setup(swaggerSpec))
 

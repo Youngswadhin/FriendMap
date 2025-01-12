@@ -13,6 +13,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
 model User {
   id               String          @id @default(auto()) @map("_id") @db.ObjectId
   name             String
@@ -68,12 +74,12 @@ model Location {
 }
 
 model FriendRequest {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  senderId   String   @db.ObjectId
-  receiverId String   @db.ObjectId
-  status     String // e.g., "pending", "accepted", "declined"
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id         String              @id @default(auto()) @map("_id") @db.ObjectId
+  senderId   String              @db.ObjectId
+  receiverId String              @db.ObjectId
+  status     FriendRequestStatus
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
 
   sender   User @relation("SentRequests", fields: [senderId], references: [id])
   receiver User @relation("ReceivedRequests", fields: [receiverId], references: [id])
