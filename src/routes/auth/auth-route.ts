@@ -222,7 +222,7 @@ authRouter.post('/sign-up', async (req, res) => {
     })
 
     const token = generateToken(user)
-    res.cookie('jwt', token, { httpOnly: true })
+    res.cookie('jwt', token, { httpOnly: true, sameSite: 'none', secure: true })
     res.status(201).json({ user, token })
   } catch (error) {
     res.status(400).json({ error: error.message })
@@ -321,7 +321,7 @@ authRouter.post('/login', async (req, res) => {
     const { password: Password, ...restUser } = user
 
     const token = generateToken(user)
-    res.cookie('jwt', token, { httpOnly: true })
+    res.cookie('jwt', token, { httpOnly: true, sameSite: 'none', secure: true })
     res.status(200).json({ user: restUser, token })
   } catch (error) {
     res.status(400).json({ error: error.message })
@@ -416,6 +416,23 @@ authRouter.get('/', async (req, res) => {
     }
     res.status(400).json({ error: error.message })
   }
+})
+
+/**
+ * @swagger
+ * /auth/logout:
+ *   post:
+ *     summary: Log out a user
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: User logged out successfully
+ *       400:
+ *         description: Bad request
+ */
+authRouter.post('/logout', (req, res) => {
+  res.clearCookie('jwt')
+  res.status(200).json({ message: 'User logged out successfully' })
 })
 
 /**
