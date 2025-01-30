@@ -159,7 +159,7 @@ authRouter.post('/sign-up', async (req, res) => {
         address: {
           create: {
             city: address.city,
-            zip: address.zip!,
+            zip: address.zip || 0,
             country: address.country,
             state: address.state,
             location: {
@@ -171,7 +171,7 @@ authRouter.post('/sign-up', async (req, res) => {
           },
         },
         hobbies,
-        image,
+        image ,
       },
       select: {
         id: true,
@@ -378,6 +378,7 @@ authRouter.get('/', async (req, res) => {
         hobbies: true,
         image: true,
         receivedRequests: {
+          where: { receiverId: decoded.userId },
           select: {
             sender: {
               select: {
@@ -390,6 +391,7 @@ authRouter.get('/', async (req, res) => {
           },
         },
         sentRequests: {
+          where: { senderId: decoded.userId },
           select: {
             receiver: {
               select: {
@@ -401,6 +403,18 @@ authRouter.get('/', async (req, res) => {
             id: true,
           },
         },
+        friends: {
+          select: {
+            friend: {
+              select: {
+                name: true,
+                image: true,
+                id: true,
+                },
+                },
+              
+                },
+              },
       },
     })
 
